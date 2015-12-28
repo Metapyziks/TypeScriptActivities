@@ -1,0 +1,11 @@
+{
+	"shuffleLeftCards": true,
+	"shuffleRightCards": true,
+	"pairs": [
+		{ "left": "A", "right": "1" },
+		{ "left": "B", "right": "2" },
+		{ "left": "C", "right": "3" },
+		{ "left": "D", "right": "4" },
+		{ "left": "E", "right": "5" }
+	]
+}
