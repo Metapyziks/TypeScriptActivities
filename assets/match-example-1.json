@@ -2,10 +2,9 @@
 	"shuffleLeftCards": true,
 	"shuffleRightCards": true,
 	"pairs": [
-		{ "left": "A", "right": "1" },
-		{ "left": "B", "right": "2" },
-		{ "left": "C", "right": "3" },
-		{ "left": "D", "right": "4" },
-		{ "left": "E", "right": "5" }
+		{ "left": "First letter of the alphabet", "right": "A" },
+		{ "left": "Second letter of the alphabet", "right": "B" },
+		{ "left": "Third letter of the alphabet", "right": "C" },
+		{ "left": "Fourth letter of the alphabet", "right": "D" }
 	]
 }

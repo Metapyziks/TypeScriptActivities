@@ -18,8 +18,10 @@ class CardPairJson
 
 class MatchGame
 {
+	game: Phaser.Game;
+	
 	private jsonPath: string;
-	private game: Phaser.Game;
+	private dropZones: DropZone[];
 	
 	constructor(divId: string, jsonPath: string)
 	{
@@ -28,10 +30,11 @@ class MatchGame
 	}
 	
 	preload()
-	{		
+	{
 		this.game.load.json("pairs-data", this.jsonPath);
 		
 		Card.preload(this.game.load);
+		DropZone.preload(this.game.load);
 	}
 	
 	create()
@@ -42,20 +45,19 @@ class MatchGame
 		var staticCards = new Array<Card>();
 		var movableCards = new Array<Card>();
 		
+		this.dropZones = new Array<DropZone>();
+		
 		var maxStaticWidth = 0;
 		
 		for (var i = 0; i < pairs.length; ++i) {
-			var staticCard = new Card(this.game, pairs[i].left, false);
-			var movableCard = new Card(this.game, pairs[i].right, true);
+			var staticCard = new Card(this, pairs[i].left, false);
+			var movableCard = new Card(this, pairs[i].right, true);
 			
-			var size = staticCard.getSize();
+			this.dropZones.push(staticCard.createDropZone(movableCard));
 			
-			if (size.x > maxStaticWidth) {
-				maxStaticWidth = size.x;
+			if (staticCard.width > maxStaticWidth) {
+				maxStaticWidth = staticCard.width;
 			}
-			
-			staticCard.matchingCard = movableCard;
-			movableCard.matchingCard = staticCard;
 			
 			staticCards.push(staticCard);
 			movableCards.push(movableCard);
@@ -63,6 +65,11 @@ class MatchGame
 		
 		this.placeCards(staticCards, 0, data.shuffleLeftCards);
 		this.placeCards(movableCards, maxStaticWidth * 2, data.shuffleRightCards);
+	}
+	
+	getDropZones(): DropZone[]
+	{
+		return this.dropZones;	
 	}
 	
 	private placeCards(cards: Card[], horzPos: number, shuffle: boolean)
@@ -75,10 +82,18 @@ class MatchGame
 		for (var i = 0; i < cards.length; ++i) {
 			var card = cards[i];
 			
-			card.position.set(horzPos, nextY);
+			card.setInitialPosition(horzPos, nextY);
+			
 			this.game.stage.addChild(card);
 			
-			nextY += card.getSize().y;
+			if (card.hasDropZone()) {
+				var dropZone = card.getDropZone();
+				
+				dropZone.position.set(card.position.x + card.width, nextY);
+				this.game.stage.addChild(dropZone);
+			}
+			
+			nextY += card.height;
 		}
 	}
 }
