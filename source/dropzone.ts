@@ -24,7 +24,7 @@ class DropZone extends Phaser.Sprite
 		this.currentCard = card;
 		
 		if (this.currentCard != null) {
-			this.currentCard.position.copyFrom(this.position);
+			this.currentCard.tweenTo(this.position, 0.125);
 		}
 	}
 }

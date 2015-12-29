@@ -1,46 +1,32 @@
 /// <reference path="../includes/phaser.d.ts" />
 /// <reference path="tools.ts" />
+/// <reference path="config.ts" />
 /// <reference path="card.ts" />
-
-class MatchGameJson
-{
-	shuffleLeftCards: boolean;
-	shuffleRightCards: boolean;
-	
-	pairs: CardPairJson[];
-}
-
-class CardPairJson
-{
-	left: string;
-	right: string;
-}
 
 class MatchGame
 {
 	game: Phaser.Game;
+	config: MatchGameJson;
 	
-	private jsonPath: string;
 	private dropZones: DropZone[];
 	
-	constructor(divId: string, jsonPath: string)
+	constructor(divId: string, config: MatchGameJson)
 	{
-		this.jsonPath = jsonPath;
+		this.config = MatchGameJson.clone(MatchGameJson.default);
+		MatchGameJson.copyFromTo(config, this.config);
+		
 		this.game = new Phaser.Game(720, 512, Phaser.AUTO, divId, this, true);
 	}
 	
 	preload()
 	{
-		this.game.load.json("pairs-data", this.jsonPath);
-		
 		Card.preload(this.game.load);
 		DropZone.preload(this.game.load);
 	}
 	
 	create()
 	{
-		var data: MatchGameJson = this.game.cache.getJSON("pairs-data");
-		var pairs = data.pairs;
+		var pairs = this.config.pairs;
 		
 		var staticCards = new Array<Card>();
 		var movableCards = new Array<Card>();
@@ -63,8 +49,8 @@ class MatchGame
 			movableCards.push(movableCard);
 		}
 		
-		this.placeCards(staticCards, 0, data.shuffleLeftCards);
-		this.placeCards(movableCards, maxStaticWidth * 2, data.shuffleRightCards);
+		this.placeCards(staticCards, 0, this.config.settings.shuffleLeftCards);
+		this.placeCards(movableCards, maxStaticWidth * 2, this.config.settings.shuffleRightCards);
 	}
 	
 	getDropZones(): DropZone[]

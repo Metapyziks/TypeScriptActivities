@@ -18,4 +18,30 @@ class Tools
 		
 		return array;
 	}
+	
+	static isArray(val: any): boolean
+	{
+		return Object.prototype.toString.call(val) === '[object Array]';
+	}
+	
+	static deepCopyFromTo(from: any, dest: any)
+	{
+		for (var key in from) {
+			if (!from.hasOwnProperty(key)) continue;
+			
+			var element = from[key];
+			if (element == null) continue;
+			
+			if (typeof(element) !== "object") {
+				dest[key] = element;
+				continue;
+			}
+			
+			if (dest[key] == null || typeof(dest[key]) !== "object") {
+				dest[key] = this.isArray(element) ? [] : {};
+			}
+			
+			this.deepCopyFromTo(element, dest[key]);
+		}
+	}
 }

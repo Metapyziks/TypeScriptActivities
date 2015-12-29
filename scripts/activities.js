@@ -15,34 +15,121 @@ var Tools = (function () {
         }
         return array;
     };
+    Tools.isArray = function (val) {
+        return Object.prototype.toString.call(val) === '[object Array]';
+    };
+    Tools.deepCopyFromTo = function (from, dest) {
+        for (var key in from) {
+            if (!from.hasOwnProperty(key))
+                continue;
+            var element = from[key];
+            if (element == null)
+                continue;
+            if (typeof (element) !== "object") {
+                dest[key] = element;
+                continue;
+            }
+            if (dest[key] == null || typeof (dest[key]) !== "object") {
+                dest[key] = this.isArray(element) ? [] : {};
+            }
+            this.deepCopyFromTo(element, dest[key]);
+        }
+    };
     return Tools;
 })();
-/// <reference path="../includes/phaser.d.ts" />
 /// <reference path="tools.ts" />
-/// <reference path="card.ts" />
 var MatchGameJson = (function () {
     function MatchGameJson() {
     }
+    MatchGameJson.clone = function (config) {
+        var clone = new MatchGameJson();
+        this.copyFromTo(config, clone);
+        return clone;
+    };
+    MatchGameJson.copyFromTo = function (from, dest) {
+        Tools.deepCopyFromTo(from, dest);
+    };
+    MatchGameJson.default = {
+        "styles": {
+            "marginH": 16,
+            "marginV": 16,
+            "cardHeight": 96,
+            "cardSpacingH": 16,
+            "cardSpacingV": 16,
+            "leftCard": {
+                "width": 192,
+                "color": "#ffffcc",
+                "text": {
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                    "align": "center",
+                    "wordWrap": true,
+                    "boundsAlignH": "center",
+                    "boundsAlignV": "middle"
+                }
+            },
+            "rightCard": {
+                "width": 96,
+                "color": "#ffffff",
+                "text": {
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                    "align": "center",
+                    "wordWrap": true,
+                    "boundsAlignH": "center",
+                    "boundsAlignV": "middle"
+                }
+            }
+        },
+        "settings": {
+            "shuffleLeftCards": false,
+            "shuffleRightCards": true
+        },
+        "pairs": null
+    };
     return MatchGameJson;
+})();
+var StylesJson = (function () {
+    function StylesJson() {
+    }
+    return StylesJson;
+})();
+var CardStyleJson = (function () {
+    function CardStyleJson() {
+    }
+    return CardStyleJson;
+})();
+var TextStyleJson = (function () {
+    function TextStyleJson() {
+    }
+    return TextStyleJson;
+})();
+var SettingsJson = (function () {
+    function SettingsJson() {
+    }
+    return SettingsJson;
 })();
 var CardPairJson = (function () {
     function CardPairJson() {
     }
     return CardPairJson;
 })();
+/// <reference path="../includes/phaser.d.ts" />
+/// <reference path="tools.ts" />
+/// <reference path="config.ts" />
+/// <reference path="card.ts" />
 var MatchGame = (function () {
-    function MatchGame(divId, jsonPath) {
-        this.jsonPath = jsonPath;
+    function MatchGame(divId, config) {
+        this.config = MatchGameJson.clone(MatchGameJson.default);
+        MatchGameJson.copyFromTo(config, this.config);
         this.game = new Phaser.Game(720, 512, Phaser.AUTO, divId, this, true);
     }
     MatchGame.prototype.preload = function () {
-        this.game.load.json("pairs-data", this.jsonPath);
         Card.preload(this.game.load);
         DropZone.preload(this.game.load);
     };
     MatchGame.prototype.create = function () {
-        var data = this.game.cache.getJSON("pairs-data");
-        var pairs = data.pairs;
+        var pairs = this.config.pairs;
         var staticCards = new Array();
         var movableCards = new Array();
         this.dropZones = new Array();
@@ -57,8 +144,8 @@ var MatchGame = (function () {
             staticCards.push(staticCard);
             movableCards.push(movableCard);
         }
-        this.placeCards(staticCards, 0, data.shuffleLeftCards);
-        this.placeCards(movableCards, maxStaticWidth * 2, data.shuffleRightCards);
+        this.placeCards(staticCards, 0, this.config.settings.shuffleLeftCards);
+        this.placeCards(movableCards, maxStaticWidth * 2, this.config.settings.shuffleRightCards);
     };
     MatchGame.prototype.getDropZones = function () {
         return this.dropZones;
@@ -103,13 +190,13 @@ var DropZone = (function (_super) {
         }
         this.currentCard = card;
         if (this.currentCard != null) {
-            this.currentCard.position.copyFrom(this.position);
+            this.currentCard.tweenTo(this.position, 0.125);
         }
     };
     return DropZone;
 })(Phaser.Sprite);
 /// <reference path="../includes/phaser.d.ts" />
-/// <reference path="match.ts" />
+/// <reference path="matchgame.ts" />
 /// <reference path="dropzone.ts" />
 var Card = (function (_super) {
     __extends(Card, _super);
@@ -146,11 +233,23 @@ var Card = (function (_super) {
         this.dragStartPos = new Phaser.Point(x, y);
         this.position.set(x, y);
     };
+    Card.prototype.stopTween = function () {
+        if (this.tween == null)
+            return;
+        this.game.tweens.remove(this.tween);
+        this.tween = null;
+    };
+    Card.prototype.tweenTo = function (dest, duration) {
+        this.stopTween();
+        this.tween = this.game.add.tween(this);
+        this.tween.to({ x: dest.x, y: dest.y }, duration * 1000, Phaser.Easing.Sinusoidal.InOut, true);
+    };
     Card.prototype.resetPosition = function () {
-        this.position.copyFrom(this.dragStartPos);
         this.dropZone = null;
+        this.tweenTo(this.dragStartPos, 0.25);
     };
     Card.prototype.onDragStart = function () {
+        this.stopTween();
         if (this.dropZone != null) {
             this.dropZone.setCurrentCard(null);
             this.dropZone = null;

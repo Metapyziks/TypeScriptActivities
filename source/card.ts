@@ -1,5 +1,5 @@
 /// <reference path="../includes/phaser.d.ts" />
-/// <reference path="match.ts" />
+/// <reference path="matchgame.ts" />
 /// <reference path="dropzone.ts" />
 
 class Card extends Phaser.Sprite
@@ -14,6 +14,7 @@ class Card extends Phaser.Sprite
 	private movable: boolean;
 	private dropZone: DropZone;
 	private dragStartPos: Phaser.Point;
+	private tween: Phaser.Tween;
 	
 	constructor(matchGame: MatchGame, text: string, movable: boolean)
 	{
@@ -46,7 +47,7 @@ class Card extends Phaser.Sprite
 		
 		this.inputEnabled = true;
 		this.input.enableDrag();
-		
+				
 		this.events.onDragStart.add(this.onDragStart, this);
 		this.events.onDragStop.add(this.onDragStop, this);
 	}
@@ -56,15 +57,31 @@ class Card extends Phaser.Sprite
 		this.dragStartPos = new Phaser.Point(x, y);
 		this.position.set(x, y);
 	}
+
+	stopTween()
+	{
+		if (this.tween == null) return;
+		this.game.tweens.remove(this.tween);
+		this.tween = null;
+	}
+	
+	tweenTo(dest: Phaser.Point, duration: number)
+	{
+		this.stopTween();
+		this.tween = this.game.add.tween(this);
+		this.tween.to({ x: dest.x, y: dest.y }, duration * 1000, Phaser.Easing.Sinusoidal.InOut, true);
+	}
 	
 	resetPosition()
 	{
-		this.position.copyFrom(this.dragStartPos);
 		this.dropZone = null;
+		this.tweenTo(this.dragStartPos, 0.25);
 	}
 	
 	private onDragStart()
 	{
+		this.stopTween();
+		
 		if (this.dropZone != null) {
 			this.dropZone.setCurrentCard(null);
 			this.dropZone = null;
