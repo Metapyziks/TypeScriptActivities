@@ -7,11 +7,13 @@
         <script src="scripts/activities.js"></script>
         <script src="assets/matchexample.js"></script>
         <script type="text/javascript">
-            var match = new MatchGame("match-game", matchExample1);
+            var matchGame = new MatchGame("match-game", matchExample1);
         </script>
     </head>
     <body style="background-color:#ccddff;">
         <h1>TypeScript Activities</h1>
         <div id="match-game"></div>
+        <a href="#" onclick="matchGame.resetCards(); return false">Reset</a>&nbsp;
+        <a href="#" onclick="matchGame.checkSolution(); return false">Check</a>
     </body>
 </html>

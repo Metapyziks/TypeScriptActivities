@@ -2,49 +2,94 @@
 /// <reference path="matchgame.ts" />
 /// <reference path="dropzone.ts" />
 
+enum MarkState
+{
+	Unmarked,
+	Incorrect,
+	Correct
+}
+
 class Card extends Phaser.Sprite
 {
 	static preload(load: Phaser.Loader)
 	{
-		load.image("card-image", "assets/card.png");
+		load.script('filterX', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/BlurX.js');
+    	load.script('filterY', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/BlurY.js');
+		
+		load.image("tick", "assets/tick.png");
+		load.image("cross", "assets/cross.png");
 	}
 	
-	private matchGame: MatchGame;
+	matchGame: MatchGame;
+	style: CardStyleJson;
+	
+	value: string;
+	
+	private cardGraphics: Phaser.Graphics;
+	private shadowGraphics: Phaser.Graphics;
 	private text: Phaser.Text;
 	private movable: boolean;
 	private dropZone: DropZone;
 	private dragStartPos: Phaser.Point;
+	private markState: MarkState;
+	private markSprite: Phaser.Sprite;
 	private tween: Phaser.Tween;
 	
-	constructor(matchGame: MatchGame, text: string, movable: boolean)
+	constructor(matchGame: MatchGame, style: CardStyleJson, value: string, movable: boolean)
 	{
-		super(matchGame.game, 0, 0, "card-image");
+		var width = style.width;
+		var height = matchGame.config.styles.cardHeight;
+		
+		super(matchGame.game, 0, 0, matchGame.getBlankTexture(width, height));
 		
 		this.matchGame = matchGame;
-		
-		var style = {
-			fontSize: 18,
-			fontWeight: "normal",
-			align: "center",
-			wordWrap: true,
-			boundsAlignH: "center",
-			boundsAlignV: "middle"
-		};
-		
+		this.style = style;
+		this.value = value;
 		this.movable = movable;
-				
-		this.text = new Phaser.Text(this.game, 0, 0, text, style);
-		this.text.setTextBounds(8, 8, this.width - 16, this.height - 16);
+		this.markState = MarkState.Unmarked;
+		
+		var blurX = this.game.add.filter("BlurX");
+		var blurY = this.game.add.filter("BlurY");
+		
+		this.shadowGraphics = new Phaser.Graphics(this.game, 0, 0);
+		this.shadowGraphics.filters = [blurX, blurY];
+		this.addChild(this.shadowGraphics);
+		
+		this.cardGraphics = new Phaser.Graphics(this.game, 0, 0);
+		this.addChild(this.cardGraphics);
+		
+		this.updateGraphics();
+		
+		this.text = new Phaser.Text(this.game, 0, 0, value, style.text);
+		this.text.setTextBounds(0, 0, this.width, this.height);
 		this.text.smoothed = false;
 		this.text.lineSpacing = -8;
 		
 		this.addChild(this.text);
+				
+		if (this.movable) this.makeMovable();		
+	}
+	
+	private updateGraphics()
+	{
+		this.shadowGraphics.clear();
+		this.shadowGraphics.beginFill(0x000000, 0);
+		this.shadowGraphics.drawRect(this.style.shadowOffsetH - 4, this.style.shadowOffsetV - 4, this.width + 8, this.height + 8);
+		this.shadowGraphics.endFill();
+		this.shadowGraphics.beginFill(0x000000, this.style.shadowAlpha);
+		this.shadowGraphics.drawRect(this.style.shadowOffsetH, this.style.shadowOffsetV, this.width, this.height);
+		this.shadowGraphics.endFill();
 		
-		if (!movable) {
-			this.tint = 0xffffcc;
-			return;
-		}
+		var color = Phaser.Color.hexToRGB(this.style.color);
 		
+		this.cardGraphics.clear();
+		this.cardGraphics.beginFill(color, 1);
+		this.cardGraphics.drawRect(0, 0, this.width, this.height);
+		this.cardGraphics.endFill();
+	}
+	
+	private makeMovable()
+	{
 		this.inputEnabled = true;
 		this.input.enableDrag();
 				
@@ -55,7 +100,6 @@ class Card extends Phaser.Sprite
 	setInitialPosition(x: number, y: number)
 	{
 		this.dragStartPos = new Phaser.Point(x, y);
-		this.position.set(x, y);
 	}
 
 	stopTween()
@@ -74,16 +118,36 @@ class Card extends Phaser.Sprite
 	
 	resetPosition()
 	{
-		this.dropZone = null;
+		if (this.movable) this.dropZone = null;
+		this.setMarkState(MarkState.Unmarked);
 		this.tweenTo(this.dragStartPos, 0.25);
+	}
+	
+	setMarkState(markState: MarkState)
+	{
+		if (this.markState == markState) return;
+		this.markState = markState;		
+		
+		if (this.markSprite != null) {
+			this.removeChild(this.markSprite);
+			this.markSprite = null;
+		}
+		
+		if (this.markState == MarkState.Unmarked) return;
+		
+		this.markSprite = new Phaser.Sprite(this.game, this.width - 20, this.height - 20,
+			this.markState == MarkState.Correct ? "tick" : "cross");
+		this.addChild(this.markSprite);
 	}
 	
 	private onDragStart()
 	{
 		this.stopTween();
+		this.bringToTop();
 		
 		if (this.dropZone != null) {
 			this.dropZone.setCurrentCard(null);
+			this.setMarkState(MarkState.Unmarked);
 			this.dropZone = null;
 		}
 	}
@@ -118,7 +182,7 @@ class Card extends Phaser.Sprite
 	
 	createDropZone(matchingCard: Card)
 	{
-		this.dropZone = new DropZone(this.game, matchingCard);
+		this.dropZone = new DropZone(this, matchingCard);
 		return this.dropZone;
 	}
 	

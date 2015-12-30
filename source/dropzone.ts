@@ -3,16 +3,41 @@
 
 class DropZone extends Phaser.Sprite
 {
+	private staticCard: Card;
 	private currentCard: Card;
+	private graphics: Phaser.Graphics;
 	
-	static preload(load: Phaser.Loader)
+	constructor(staticCard: Card, matchingCard: Card)
 	{
-		load.image("dropzone-image", "assets/dropzone.png");
-	}
+		var width = matchingCard.width;
+		var height = matchingCard.height;
+		var texture = matchingCard.matchGame.getBlankTexture(width, height);
 		
-	constructor(game: Phaser.Game, matchingCard: Card)
+		super(matchingCard.game, 0, 0, texture);
+		
+		this.staticCard = staticCard;
+		
+		this.graphics = new Phaser.Graphics(this.game, 0, 0);
+		this.addChild(this.graphics);
+		
+		this.updateGraphics();
+	}
+	
+	private updateGraphics()
 	{
-		super(game, 0, 0, "dropzone-image");
+		this.graphics.clear();
+		this.graphics.lineStyle(1, 0x000000, 0.125);
+		this.graphics.drawRect(-2, -2, this.width + 4, this.height + 4);
+	}
+	
+	checkCurrentCard(): boolean
+	{
+		if (this.currentCard == null) return false;
+		
+		var correct = this.staticCard.matchGame.isMatch(this.staticCard.value, this.currentCard.value);
+		
+		this.currentCard.setMarkState(correct ? MarkState.Correct : MarkState.Incorrect);
+		return correct;
 	}
 	
 	setCurrentCard(card: Card)
