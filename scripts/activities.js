@@ -64,11 +64,17 @@ var MatchGameJson = (function () {
                 "shadowOffsetH": 2,
                 "shadowOffsetV": 2,
                 "shadowAlpha": 0.25,
+                "marginH": 16,
+                "marginV": 8,
+                "easingFunction": "Sinusoidal",
+                "easingType": "InOut",
+                "easingTimeScale": 1,
                 "text": {
                     "fontSize": 16,
                     "fontWeight": "normal",
                     "align": "center",
                     "wordWrap": true,
+                    "wordWrapWidth": -1,
                     "boundsAlignH": "center",
                     "boundsAlignV": "middle",
                     "lineSpacing": -8
@@ -80,11 +86,17 @@ var MatchGameJson = (function () {
                 "shadowOffsetH": 2,
                 "shadowOffsetV": 2,
                 "shadowAlpha": 0.25,
+                "marginH": 16,
+                "marginV": 8,
+                "easingFunction": "Sinusoidal",
+                "easingType": "InOut",
+                "easingTimeScale": 1,
                 "text": {
                     "fontSize": 22,
                     "fontWeight": "normal",
                     "align": "center",
                     "wordWrap": true,
+                    "wordWrapWidth": -1,
                     "boundsAlignH": "center",
                     "boundsAlignV": "middle",
                     "lineSpacing": -8
@@ -313,8 +325,9 @@ var Card = (function (_super) {
         this.cardGraphics = new Phaser.Graphics(this.game, 0, 0);
         this.addChild(this.cardGraphics);
         this.updateGraphics();
+        style.text.wordWrapWidth = width - style.marginH * 2;
         this.text = new Phaser.Text(this.game, 0, 0, value, style.text);
-        this.text.setTextBounds(0, 0, this.width, this.height);
+        this.text.setTextBounds(style.marginH, style.marginV, width - style.marginH * 2, height - style.marginV * 2);
         this.text.smoothed = false;
         this.text.lineSpacing = -8;
         this.addChild(this.text);
@@ -359,7 +372,7 @@ var Card = (function (_super) {
     Card.prototype.tweenTo = function (dest, duration) {
         this.stopTween();
         this.tween = this.game.add.tween(this);
-        this.tween.to({ x: dest.x, y: dest.y }, duration * 1000, Phaser.Easing.Sinusoidal.InOut, true);
+        this.tween.to({ x: dest.x, y: dest.y }, duration * 1000 * this.style.easingTimeScale, Phaser.Easing[this.style.easingFunction][this.style.easingType], true);
     };
     Card.prototype.resetPosition = function () {
         if (this.movable)

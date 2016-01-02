@@ -60,8 +60,10 @@ class Card extends Phaser.Sprite
 		
 		this.updateGraphics();
 		
+		style.text.wordWrapWidth = width - style.marginH * 2;
+		
 		this.text = new Phaser.Text(this.game, 0, 0, value, style.text);
-		this.text.setTextBounds(0, 0, this.width, this.height);
+		this.text.setTextBounds(style.marginH, style.marginV, width - style.marginH * 2, height - style.marginV * 2);
 		this.text.smoothed = false;
 		this.text.lineSpacing = -8;
 		
@@ -113,7 +115,8 @@ class Card extends Phaser.Sprite
 	{
 		this.stopTween();
 		this.tween = this.game.add.tween(this);
-		this.tween.to({ x: dest.x, y: dest.y }, duration * 1000, Phaser.Easing.Sinusoidal.InOut, true);
+		this.tween.to({ x: dest.x, y: dest.y }, duration * 1000 * this.style.easingTimeScale,
+			Phaser.Easing[this.style.easingFunction][this.style.easingType], true);
 	}
 	
 	resetPosition()

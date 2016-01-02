@@ -23,12 +23,20 @@ class MatchGameJson
 				"shadowOffsetV": 2,
 				"shadowAlpha": 0.25,
 				
+				"marginH": 16,
+				"marginV": 8,
+				
+				"easingFunction": "Sinusoidal",
+				"easingType": "InOut",
+				"easingTimeScale": 1,
+				
 				"text":
 				{
 					"fontSize": 16,
 					"fontWeight": "normal",
 					"align": "center",
 					"wordWrap": true,
+					"wordWrapWidth": -1,
 					"boundsAlignH": "center",
 					"boundsAlignV": "middle",
 					"lineSpacing": -8
@@ -44,12 +52,20 @@ class MatchGameJson
 				"shadowOffsetV": 2,
 				"shadowAlpha": 0.25,
 				
+				"marginH": 16,
+				"marginV": 8,
+				
+				"easingFunction": "Sinusoidal",
+				"easingType": "InOut",
+				"easingTimeScale": 1,
+				
 				"text":
 				{
 					"fontSize": 22,
 					"fontWeight": "normal",
 					"align": "center",
 					"wordWrap": true,
+					"wordWrapWidth": -1,
 					"boundsAlignH": "center",
 					"boundsAlignV": "middle",
 					"lineSpacing": -8
@@ -103,9 +119,14 @@ class CardStyleJson
 {
 	width: number;
 	color: string;
+	easingFunction: string;
+	easingType: string;
+	easingTimeScale: number;
 	shadowOffsetH: number;
 	shadowOffsetV: number;
 	shadowAlpha: number;
+	marginH: number;
+	marginV: number;
 	text: TextStyleJson;
 }
 
@@ -115,6 +136,7 @@ class TextStyleJson
 	fontWeight: string;
 	align: string;
 	wordWrap: boolean;
+	wordWrapWidth: number;
 	boundsAlignH: string;
 	boundsAlignV: string;
 	lineSpacing: number;
